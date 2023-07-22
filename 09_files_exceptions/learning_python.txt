@@ -1,0 +1,4 @@
+In Python, you can create classes that represent real-life objects.
+In Python, you can create video games.
+In Python, you can make statistics for companies.
+In Python, you can store people in a dictionary with its data.
