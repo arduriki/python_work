@@ -18,11 +18,10 @@ class RainDropsGame:
         # Window mode:
         self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
 
-        pygame.display.set_caption("Raindrops Game")
+        pygame.display.set_caption("Raindrops")
 
         self.raindrops = pygame.sprite.Group()
-
-        self._create_group()
+        self._create_drops()
 
     def run_game(self):
         """Start the main loop for the game."""
@@ -47,7 +46,67 @@ class RainDropsGame:
 
     def _create_drops(self):
         """Create a group of raindrops."""
-        # 
-        # 
-        raindrop = Raindrop(self)
+        # Create a drop and keep adding drops until there's no room left.
+        # Spacing between drops is one drop width.
+        # Note that the spacing here works reasonably for larger drops.
+        # If you're working with smaller drops, there might be a better
+        # approach to spacing.
+        drop = Raindrop(self)
         drop_width, drop_height = drop.rect.size
+
+        current_x, current_y = drop_width, drop_height
+        while current_y < (self.settings.screen_height - 2 * drop_height):
+            while current_x < (self.settings.screen_width - 2 * drop_width):
+                self._create_drop(current_x, current_y)
+                current_x += 2 * drop_width
+
+            # Finished a row; reset x value, and increment y value.
+            current_x = drop_width
+            current_y += 2 * drop_height
+
+    def _create_drop(self, x_position, y_position):
+        """Create a drop and place it in the grid."""
+        new_drop = Raindrop(self)
+        new_drop.y = y_position
+        new_drop.rect.x = x_position
+        new_drop.rect.y = y_position
+        self.raindrops.add(new_drop)
+
+    def _create_new_row(self):
+        """Create a new row of raindrops after a row disappears."""
+        drop = Raindrop(self)
+        drop_width, drop_height = drop.rect.size
+
+        current_x = drop_width
+        current_y = -1 * drop_height
+        while current_x < (self.settings.screen_width - 2 * drop_width):
+            self._create_drop(current_x, current_y)
+            current_x += 2 * drop_width
+
+    def _update_raindrops(self):
+        """Update drop positions, and look for drops that have disappeared."""
+        self.raindrops.update()
+
+        # Assume we won't make new drop.
+        make_new_drops = False
+        for drop in self.raindrops.copy():
+            if drop.check_disappeared():
+                # Remove this drop, and we'll need to make new drops.
+                self.raindrops.remove(drop)
+                make_new_drops = True
+
+        # Make a new row of drops if needed.
+        if make_new_drops:
+            self._create_new_row()
+
+    def _update_screen(self):
+        """Update images on the screen, and flip to the new screen."""
+        self.screen.fill(self.settings.bg_color)
+        self.raindrops.draw(self.screen)
+
+        pygame.display.flip()
+
+if __name__ == '__main__':
+    # Make a game instance, and run the game.
+    rd_game = RainDropsGame()
+    rd_game.run_game()
