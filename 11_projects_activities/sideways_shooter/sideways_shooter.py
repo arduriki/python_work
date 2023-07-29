@@ -1,9 +1,13 @@
 import sys
+from random import random
+
 import pygame
 
 from settings import Settings
 from ship import Ship
 from bullet import Bullet
+from alien import Alien
+
 
 class SidewaysShooter:
     """Overall class to manage game assets and behavior."""
@@ -15,22 +19,29 @@ class SidewaysShooter:
         self.clock = pygame.time.Clock()
 
         # Window mode:
-        self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
+        self.screen = pygame.display.set_mode(
+            (self.settings.screen_width, self.settings.screen_height))
 
         pygame.display.set_caption("Sideways Shooter")
 
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
+        self.aliens = pygame.sprite.Group()
 
     def run_game(self):
         """Start the main loop for the game."""
         while True:
             self._check_events()
+
+            # Create a new alien.
+            self._create_alien()
+
             self.ship.update()
             self._update_bullets()
+            self.aliens.update()
             self._update_screen()
             self.clock.tick(60)
-    
+
     def _check_events(self):
         """Respond to keypresses and mouse events."""
         for event in pygame.event.get():
@@ -40,7 +51,7 @@ class SidewaysShooter:
                 self._check_keydown_events(event)
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
-    
+
     def _check_keydown_events(self, event):
         """Respond to keypresses."""
         if event.key == pygame.K_UP:
@@ -75,12 +86,28 @@ class SidewaysShooter:
             if bullet.rect.right <= 0:
                 self.bullets.remove(bullet)
 
+        self._check_bullet_alien_collisions()
+
+    def _check_bullet_alien_collisions(self):
+        """Respond to bullet-alien collisions."""
+        # Remove any bullets and aliens that have collided.
+        collisions = pygame.sprite.groupcollide(
+            self.bullets, self.aliens, True, True)
+
+    def _create_alien(self):
+        """Create an alien, if conditions are right."""
+        if random() < self.settings.alien_frequency:
+            alien = Alien(self)
+            self.aliens.add(alien)
+
     def _update_screen(self):
         """Update images on the screen, and flip to the new screen."""
         self.screen.fill(self.settings.bg_color)
+        self.ship.blitme()
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
-        self.ship.blitme()
+
+        self.aliens.draw(self.screen)
 
         pygame.display.flip()
 
