@@ -71,7 +71,8 @@ class TargetPractice:
 
     def _start_game(self):
         """Start a new game."""
-        # Reset the game statistics.
+        # Reset dynamic settings and game statistics.
+        self.settings.initialize_dynamic_settings()
         self.stats.reset_stats()
         self.game_active = True
 
@@ -135,6 +136,12 @@ class TargetPractice:
         """Check whether any bullets have hit the target."""
         collisions = pygame.sprite.spritecollide(
             self.target, self.bullets, True)
+        
+        if collisions:
+            # Update stats, and see if game should speed up.
+            self.stats.num_hits += 1
+            if self.stats.num_hits % self.settings.levelup_hits == 0:
+                self.settings.increase_speed()
 
     def _update_screen(self):
         """Update images on the screen, and flip to the new screen."""
